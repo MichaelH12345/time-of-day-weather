@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time of Day Video</title>
     <title>Time of Day Greeting</title>
     <style>
         @font-face {
@@ -17,28 +16,22 @@
         @font-face {
             font-family: 'BarlowSemiCondensedBold';
             src: url('https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/BarlowSemiCondensed-Bold.otf') format('opentype');
-@@ -23,79 +27,101 @@
+        }
+        @font-face {
+            font-family: 'BarlowSemiBold';
+            src: url('https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Barlow-SemiBold.otf') format('opentype');
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             width: 100%;
             height: 100%;
-        }
-        video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
             background-color: white;
             position: relative;
         }
         .temperature {
             position: absolute;
-            right: 125px;
-            bottom: 100px;
-            font-size: 350px;
-            color: white;
             right: 100px;
             bottom: 50px;
             font-size: 400px;
@@ -46,7 +39,6 @@
             font-family: 'BarlowSemiCondensedBold', sans-serif;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.75);
         }
         .temperature sup {
             font-size: 50%;
@@ -54,10 +46,6 @@
         }
         .description {
             position: absolute;
-            left: 1385px;
-            bottom: 75px;
-            font-size: 75px;
-            color: white;
             left: 1440px;
             bottom: 50px;
             font-size: 50px;
@@ -65,10 +53,8 @@
             font-family: 'BarlowLight', sans-serif;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.75);
             text-align: left;
         }
-        .rss-title {
 .rss-title {
     position: absolute;
     left: 75px;
@@ -99,11 +85,6 @@
         }
         .greeting {
             position: absolute;
-            left: 75px;
-            top: 550px;
-            font-size: 85px;
-            color: white;
-            font-family: 'BarlowSemiBold', sans-serif;
             left: -100%; /* Start off screen to the left */
             top: 25px;
             font-size: 200px;
@@ -130,18 +111,10 @@
             width: auto;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.75);
-            text-align: left;
-            width: 1200px;
-            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <video id="videoPlayer" autoplay muted loop>
-        <source id="videoSource" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
     <div id="temperature" class="temperature"></div>
     <div id="description" class="description"></div>
     <div id="rssTitle" class="rss-title"></div>
@@ -149,29 +122,17 @@
     <div id="weatherPhrase" class="weather-phrase"></div>
     <img id="weatherIcon" class="weather-icon" src="" alt="Weather Icon">
     <script>
-        function getVideoSource() {
-            const currentHour = new Date().getHours();
-            let videoSource;
-
-            if (currentHour >= 7 && currentHour < 12) {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Morning1.mp4';
-            } else if (currentHour >= 12 && currentHour < 17) {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Afternoon1.mp4';
-            } else {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Evening1.mp4';
-            }
-
-            return videoSource;
-        }
-
         function fetchWeatherData() {
             const apiKey = 'c2833fc42c32696641d680c030b432b4';
             const lat = 54.7112;
-@@ -107,44 +133,118 @@
+            const lon = -3.4436;
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+
+            fetch(url)
+                .then(response => response.json())
                 .then(data => {
                     const temp = Math.round(data.main.temp);
                     const weatherDescription = data.weather[0].description; // Fetching full weather description
-                    document.getElementById('temperature').textContent = `${temp}°`;
                     const iconCode = data.weather[0].icon; // Fetching weather icon code
                     const weatherPhrase = getWeatherPhrase(temp, weatherDescription);
 
@@ -186,13 +147,11 @@
 
                     setTimeout(() => {
                         document.getElementById('description').style.opacity = 1;
-                    }, 1500);
                     }, 4000); // 4 seconds delay for description fade-in
                 })
                 .catch(error => console.error('Error fetching weather data:', error));
         }
 
-        function fetchRSSTitle() {
          function fetchRSSTitle() {
             const url = 'https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/2651446';
 
@@ -201,13 +160,8 @@
                 .then(data => {
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "application/xml");
-                    const title = xmlDoc.getElementsByTagName("item")[0].getElementsByTagName("title")[0].textContent;
-                    document.getElementById('rssTitle').textContent = title;
                     const items = xmlDoc.getElementsByTagName("item");
 
-                    setTimeout(() => {
-                        document.getElementById('rssTitle').style.opacity = 1;
-                    }, 1000);
                     if (items.length > 1) {
                         const firstTitle = formatTitle(items[0].getElementsByTagName("title")[0].textContent);
                         const secondTitle = formatTitle(items[1].getElementsByTagName("title")[0].textContent);
@@ -221,12 +175,9 @@
                 .catch(error => console.error('Error fetching RSS feed:', error));
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const videoPlayer = document.getElementById("videoPlayer");
-            const videoSource = document.getElementById("videoSource");
         function formatTitle(title) {
             // Replace commas with full stops
-            title = title.replace(/,/g, '.');
+            title = title.replace(/,/g, ' ');
             // Replace 'Minimum Temperature:' with 'Low:' and 'Maximum Temperature:' with 'High:'
             title = title.replace(/Minimum Temperature:/gi, 'Low:');
             title = title.replace(/Maximum Temperature:/gi, 'High:');
@@ -260,8 +211,6 @@
             }, 500); // 0.5 seconds delay for greeting slide-in
         }
 
-            videoSource.src = getVideoSource();
-            videoPlayer.load();
         function getWeatherPhrase(temp, weatherDescription) {
             let phrase = '';
 
@@ -299,3 +248,4 @@
         });
     </script>
 </body>
+</html>
