@@ -55,43 +55,43 @@
             transition: opacity 1s;
             text-align: left;
         }
-.rss-title {
-    position: absolute;
-    left: 75px;
-    top: 425px;
-    font-size: 60px;
-    color: black;
-    font-family: 'BarlowSemiBold', sans-serif;
-    opacity: 0; /* Initial opacity set to 0 */
-    transform: translateY(500px); /* Start position 500px below */
-    visibility: hidden; /* Hide element initially */
-    animation: slideUpFadeIn 1s ease-in-out forwards;
-    animation-delay: 1.5s;
-}
-
-@keyframes slideUpFadeIn {
-    0% {
-        opacity: 0; /* Start with opacity 0 */
-        transform: translateY(500px); /* Start 500px below */
-    }
-    100% {
-        opacity: 1; /* End with opacity 1 */
-        transform: translateY(0); /* Slide up to final position */
-        visibility: visible; /* Ensure element is visible at the end of animation */
-    }
-}
+        .rss-title {
+            position: absolute;
+            left: 75px;
+            top: 425px;
+            font-size: 60px;
+            color: black;
+            font-family: 'BarlowSemiBold', sans-serif;
+            opacity: 0;
+            transform: translateY(500px);
+            visibility: hidden;
+            transition: opacity 1s;
+            animation: slideUpFadeIn 1s ease-in-out forwards;
+            animation-delay: 1.5s;
+        }
+        @keyframes slideUpFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(500px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                visibility: visible;
+            }
+        }
         .rss-title span {
             display: block;
         }
         .greeting {
             position: absolute;
-            left: -100%; /* Start off screen to the left */
+            left: -100%;
             top: 25px;
             font-size: 200px;
             color: black;
             font-family: 'BarlowBlack', sans-serif;
             opacity: 0;
-            transition: opacity 1s, left 1s; /* Transition opacity and left position */
+            transition: opacity 1s, left 1s;
         }
         .weather-phrase {
             position: absolute;
@@ -132,8 +132,8 @@
                 .then(response => response.json())
                 .then(data => {
                     const temp = Math.round(data.main.temp);
-                    const weatherDescription = data.weather[0].description; // Fetching full weather description
-                    const iconCode = data.weather[0].icon; // Fetching weather icon code
+                    const weatherDescription = data.weather[0].description;
+                    const iconCode = data.weather[0].icon;
                     const weatherPhrase = getWeatherPhrase(temp, weatherDescription);
 
                     document.getElementById('temperature').innerHTML = `${temp}<sup>°</sup>`;
@@ -143,16 +143,16 @@
 
                     setTimeout(() => {
                         document.getElementById('temperature').style.opacity = 1;
-                    }, 3000); // 3 seconds delay for temperature fade-in
+                    }, 2500); 
 
                     setTimeout(() => {
                         document.getElementById('description').style.opacity = 1;
-                    }, 4000); // 4 seconds delay for description fade-in
+                    }, 2750); 
                 })
                 .catch(error => console.error('Error fetching weather data:', error));
         }
 
-         function fetchRSSTitle() {
+        function fetchRSSTitle() {
             const url = 'https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/2651446';
 
             fetch(url)
@@ -176,20 +176,14 @@
         }
 
         function formatTitle(title) {
-            // Replace commas with full stops
-            title = title.replace(/,/g, '.');
-            // Replace 'Minimum Temperature:' with 'Low:' and 'Maximum Temperature:' with 'High:'
+            title = title.replace(/,/g, '');
             title = title.replace(/Minimum Temperature:/gi, 'Low:');
             title = title.replace(/Maximum Temperature:/gi, 'High:');
-            // Remove the Fahrenheit temperature
             title = title.replace(/\(\d+°F\)/g, '');
-            // Separate 'High' and 'Low' on separate lines
             title = title.replace(/(High:|Low:)/gi, '<br>$1');
 
             return title;
         }
-
-
 
         function getGreeting() {
             const currentHour = new Date().getHours();
@@ -207,8 +201,8 @@
 
             setTimeout(() => {
                 document.getElementById('greeting').style.opacity = 1;
-                document.getElementById('greeting').style.left = '75px'; // Slide in from left animation
-            }, 500); // 0.5 seconds delay for greeting slide-in
+                document.getElementById('greeting').style.left = '75px';
+            }, 500);
         }
 
         function getWeatherPhrase(temp, weatherDescription) {
@@ -219,13 +213,13 @@
             } else if (weatherDescription.includes('clear')) {
                 phrase = 'You might need your sunglasses.';
             } else if (temp >= -5 && temp < 0) {
-                phrase = "It's chilly out there.";
+                phrase = "It's freezing out there.";
             } else if (temp >= 0 && temp < 5) {
                 phrase = "It's chilly out there.";
             } else if (temp >= 5 && temp < 10) {
                 phrase = "It's cold out there.";
             } else if (temp >= 10 && temp < 14) {
-                phrase = "It's mild out there.";
+                phrase = "It's cool out there.";
             } else if (temp >= 14 && temp < 20) {
                 phrase = "It's mild out there.";
             } else if (temp >= 20 && temp < 25) {
@@ -237,15 +231,39 @@
             return phrase;
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        function resetElements() {
+            const elements = ['temperature', 'description', 'rssTitle', 'greeting', 'weatherPhrase', 'weatherIcon'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                element.style.opacity = 0;
+                if (id === 'greeting') {
+                    element.style.left = '-100%';
+                }
+                if (id === 'rssTitle') {
+                    element.style.visibility = 'hidden';
+                }
+            });
+
+            setTimeout(() => {
+                startSequence();
+            }, 1000);
+        }
+
+        function startSequence() {
             fetchWeatherData();
             fetchRSSTitle();
             getGreeting();
 
             setTimeout(() => {
                 document.getElementById('weatherPhrase').style.opacity = 1;
-            }, 1250); // 1 second delay for weather phrase fade-in
-        });
+            }, 1250);
+
+            setTimeout(() => {
+                resetElements();
+            }, 15000);
+        }
+
+        document.addEventListener("DOMContentLoaded", startSequence);
     </script>
 </body>
 </html>
