@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time of Day Video</title>
+    <title>Time of Day Greeting</title>
     <style>
         @font-face {
             font-family: 'BarlowLight';
             src: url('https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Barlow-Light.otf') format('opentype');
+        }
+        @font-face {
+            font-family: 'BarlowBlack';
+            src: url('https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Barlow-Black.otf') format('opentype');
         }
         @font-face {
             font-family: 'BarlowSemiCondensedBold';
@@ -23,79 +27,101 @@
             overflow: hidden;
             width: 100%;
             height: 100%;
-        }
-        video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
+            background-color: white;
+            position: relative;
         }
         .temperature {
             position: absolute;
-            right: 125px;
-            bottom: 100px;
-            font-size: 350px;
-            color: white;
+            right: 100px;
+            bottom: 50px;
+            font-size: 400px;
+            color: black;
             font-family: 'BarlowSemiCondensedBold', sans-serif;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.75);
+        }
+        .temperature sup {
+            font-size: 50%;
+            vertical-align: super;
         }
         .description {
             position: absolute;
-            left: 1385px;
-            bottom: 75px;
-            font-size: 75px;
-            color: white;
+            left: 1440px;
+            bottom: 50px;
+            font-size: 50px;
+            color: black;
             font-family: 'BarlowLight', sans-serif;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.75);
             text-align: left;
         }
-        .rss-title {
+.rss-title {
+    position: absolute;
+    left: 75px;
+    top: 425px;
+    font-size: 60px;
+    color: black;
+    font-family: 'BarlowSemiBold', sans-serif;
+    opacity: 0; /* Initial opacity set to 0 */
+    transform: translateY(500px); /* Start position 500px below */
+    visibility: hidden; /* Hide element initially */
+    animation: slideUpFadeIn 1s ease-in-out forwards;
+    animation-delay: 1.5s;
+}
+
+@keyframes slideUpFadeIn {
+    0% {
+        opacity: 0; /* Start with opacity 0 */
+        transform: translateY(500px); /* Start 500px below */
+    }
+    100% {
+        opacity: 1; /* End with opacity 1 */
+        transform: translateY(0); /* Slide up to final position */
+        visibility: visible; /* Ensure element is visible at the end of animation */
+    }
+}
+        .rss-title span {
+            display: block;
+        }
+        .greeting {
             position: absolute;
-            left: 75px;
-            top: 550px;
-            font-size: 85px;
-            color: white;
-            font-family: 'BarlowSemiBold', sans-serif;
+            left: -100%; /* Start off screen to the left */
+            top: 25px;
+            font-size: 200px;
+            color: black;
+            font-family: 'BarlowBlack', sans-serif;
+            opacity: 0;
+            transition: opacity 1s, left 1s; /* Transition opacity and left position */
+        }
+        .weather-phrase {
+            position: absolute;
+            left: 80px;
+            top: 250px;
+            font-size: 100px;
+            color: black;
+            font-family: 'BarlowSemiCondensedBold', sans-serif;
             opacity: 0;
             transition: opacity 1s;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.75);
-            text-align: left;
-            width: 1200px;
-            word-wrap: break-word;
+        }
+        .weather-icon {
+            position: absolute;
+            bottom: 100px;
+            right: 100px;
+            height: 100px;
+            width: auto;
+            opacity: 0;
+            transition: opacity 1s;
         }
     </style>
 </head>
 <body>
-    <video id="videoPlayer" autoplay muted loop>
-        <source id="videoSource" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
     <div id="temperature" class="temperature"></div>
     <div id="description" class="description"></div>
     <div id="rssTitle" class="rss-title"></div>
+    <div id="greeting" class="greeting"></div>
+    <div id="weatherPhrase" class="weather-phrase"></div>
+    <img id="weatherIcon" class="weather-icon" src="" alt="Weather Icon">
     <script>
-        function getVideoSource() {
-            const currentHour = new Date().getHours();
-            let videoSource;
-
-            if (currentHour >= 7 && currentHour < 12) {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Morning1.mp4';
-            } else if (currentHour >= 12 && currentHour < 17) {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Afternoon1.mp4';
-            } else {
-                videoSource = 'https://raw.githubusercontent.com/MichaelH12345/time-of-day-weather/main/Evening1.mp4';
-            }
-
-            return videoSource;
-        }
-
         function fetchWeatherData() {
             const apiKey = 'c2833fc42c32696641d680c030b432b4';
             const lat = 54.7112;
@@ -107,18 +133,26 @@
                 .then(data => {
                     const temp = Math.round(data.main.temp);
                     const weatherDescription = data.weather[0].description; // Fetching full weather description
-                    document.getElementById('temperature').textContent = `${temp}°`;
+                    const iconCode = data.weather[0].icon; // Fetching weather icon code
+                    const weatherPhrase = getWeatherPhrase(temp, weatherDescription);
+
+                    document.getElementById('temperature').innerHTML = `${temp}<sup>°</sup>`;
                     document.getElementById('description').textContent = weatherDescription;
+                    document.getElementById('weatherPhrase').textContent = weatherPhrase;
+                    document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${iconCode}.png`;
 
                     setTimeout(() => {
                         document.getElementById('temperature').style.opacity = 1;
+                    }, 3000); // 3 seconds delay for temperature fade-in
+
+                    setTimeout(() => {
                         document.getElementById('description').style.opacity = 1;
-                    }, 1500);
+                    }, 4000); // 4 seconds delay for description fade-in
                 })
                 .catch(error => console.error('Error fetching weather data:', error));
         }
 
-        function fetchRSSTitle() {
+         function fetchRSSTitle() {
             const url = 'https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/2651446';
 
             fetch(url)
@@ -126,25 +160,91 @@
                 .then(data => {
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(data, "application/xml");
-                    const title = xmlDoc.getElementsByTagName("item")[0].getElementsByTagName("title")[0].textContent;
-                    document.getElementById('rssTitle').textContent = title;
+                    const items = xmlDoc.getElementsByTagName("item");
 
-                    setTimeout(() => {
-                        document.getElementById('rssTitle').style.opacity = 1;
-                    }, 1000);
+                    if (items.length > 1) {
+                        const firstTitle = formatTitle(items[0].getElementsByTagName("title")[0].textContent);
+                        const secondTitle = formatTitle(items[1].getElementsByTagName("title")[0].textContent);
+                        document.getElementById('rssTitle').innerHTML = `${firstTitle}<br><br>${secondTitle}`;
+
+                        setTimeout(() => {
+                            document.getElementById('rssTitle').style.opacity = 1;
+                        }, 1000);
+                    }
                 })
                 .catch(error => console.error('Error fetching RSS feed:', error));
         }
 
+        function formatTitle(title) {
+            // Replace commas with full stops
+            title = title.replace(/,/g, '.');
+            // Replace 'Minimum Temperature:' with 'Low:' and 'Maximum Temperature:' with 'High:'
+            title = title.replace(/Minimum Temperature:/gi, 'Low:');
+            title = title.replace(/Maximum Temperature:/gi, 'High:');
+            // Remove the Fahrenheit temperature
+            title = title.replace(/\(\d+°F\)/g, '');
+            // Separate 'High' and 'Low' on separate lines
+            title = title.replace(/(High:|Low:)/gi, '<br>$1');
+
+            return title;
+        }
+
+
+
+        function getGreeting() {
+            const currentHour = new Date().getHours();
+            let greeting;
+
+            if (currentHour >= 7 && currentHour < 12) {
+                greeting = 'Good Morning.';
+            } else if (currentHour >= 12 && currentHour < 17) {
+                greeting = 'Good Afternoon.';
+            } else {
+                greeting = 'Good Evening.';
+            }
+
+            document.getElementById('greeting').textContent = greeting;
+
+            setTimeout(() => {
+                document.getElementById('greeting').style.opacity = 1;
+                document.getElementById('greeting').style.left = '75px'; // Slide in from left animation
+            }, 500); // 0.5 seconds delay for greeting slide-in
+        }
+
+        function getWeatherPhrase(temp, weatherDescription) {
+            let phrase = '';
+
+            if (weatherDescription.includes('rain')) {
+                phrase = 'You might need an umbrella.';
+            } else if (weatherDescription.includes('clear')) {
+                phrase = 'You might need your sunglasses.';
+            } else if (temp >= -5 && temp < 0) {
+                phrase = "It's chilly out there.";
+            } else if (temp >= 0 && temp < 5) {
+                phrase = "It's chilly out there.";
+            } else if (temp >= 5 && temp < 10) {
+                phrase = "It's cold out there.";
+            } else if (temp >= 10 && temp < 14) {
+                phrase = "It's mild out there.";
+            } else if (temp >= 14 && temp < 20) {
+                phrase = "It's mild out there.";
+            } else if (temp >= 20 && temp < 25) {
+                phrase = "It's warm out there.";
+            } else if (temp >= 25 && temp < 40) {
+                phrase = "It's hot out there.";
+            }
+
+            return phrase;
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
-            const videoPlayer = document.getElementById("videoPlayer");
-            const videoSource = document.getElementById("videoSource");
-
-            videoSource.src = getVideoSource();
-            videoPlayer.load();
-
             fetchWeatherData();
             fetchRSSTitle();
+            getGreeting();
+
+            setTimeout(() => {
+                document.getElementById('weatherPhrase').style.opacity = 1;
+            }, 1250); // 1 second delay for weather phrase fade-in
         });
     </script>
 </body>
